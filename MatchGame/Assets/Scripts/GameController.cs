@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class GameController : MonoBehaviour
 {
@@ -23,6 +24,11 @@ public class GameController : MonoBehaviour
     private GameObject card1 = null;
     private GameObject card2 = null;
 
+    [Header("GUI References")]
+    [SerializeField] private TextMeshProUGUI tryCounter = null;
+
+    [Header("Game State Variables")]
+    private int matchCounter = 0;
     private bool gameWon = false;
 
     void Awake()
@@ -87,12 +93,14 @@ public class GameController : MonoBehaviour
         if (card1 != null && card1.GetComponent<CardClass>().GetRevealed() && card2 != null && card2.GetComponent<CardClass>().GetRevealed()) {
             if (card1.tag == card2.tag) {
                 MatchRemove();
+                tryCounter.text = (++matchCounter).ToString();
                 card1 = null;
                 card2 = null;
 
                 CheckWin();
             } else {
                 ResetCards();
+                tryCounter.text = (++matchCounter).ToString();
                 card1 = null;
                 card2 = null;
             }
@@ -167,4 +175,7 @@ public class GameController : MonoBehaviour
 
         gameWon = true;
     }
+
+    public void RestartGame() { SceneManager.LoadScene(SceneManager.GetActiveScene().name); }
+    public void ExitGame() { Application.Quit(); }
 }
