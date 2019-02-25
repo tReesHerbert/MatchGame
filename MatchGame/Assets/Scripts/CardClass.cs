@@ -1,46 +1,52 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class CardClass : MonoBehaviour
 {
-    //GameObject GameController;
-    private bool flipped;
-    private bool isMatched;
-    // Start is called before the first frame update
-    void Start()
-    {
-        //GameController = GameObject.FindGameObjectWithTag("GameController");
-        flipped = false;
-        isMatched = false;
+    // Card state Variables
+    private bool revealed = false;
+    private bool isMatched = false;
+    private bool turning = false;
+
+    private TextMeshProUGUI numberText = null;
+    private Animator anim = null;
+
+    public void SetHidden() { revealed = false; turning = false; }
+    public void SetRevealed() {
+        Debug.Log("Set Revealed");
+        // Setting State Variables
+        revealed = true;
+        turning = false;
+
+        // Telling the Manager to check for a win
+        GameController.controller.CheckForCardMatch();
     }
 
-    // Update is called once per frame
-    void Update()
+    public bool GetIsMatched() { return isMatched; }
+    public bool GetRevealed() { return revealed; }
+
+    public void Awake()
     {
-        
+        // Getting the Anim Ref
+        anim = GetComponent<Animator>();
+
+        // Getting the Debug Text
+        numberText = transform.GetChild(0).GetComponent<TextMeshProUGUI>();
     }
 
-    public void flipCard()
-    {
-        if(flipped == true)
-        {
-            flipped = false;
+    public void FlipCard() {
+        if (!turning) {
+            if (!revealed) {
+                anim.SetTrigger("Reveal");
+                turning = true;
+            } else {
+                anim.SetTrigger("Hide");
+                turning = true;
+            }
         }
-        else if(flipped == false)
-        {
-            flipped = true;
-        }
-        //dostuff
     }
 
-    public bool getIsMatched()
-    {
-        return isMatched;
-    }
-
-    public bool getFlipped()
-    {
-        return flipped;
-    }
+    
 }

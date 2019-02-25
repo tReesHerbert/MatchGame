@@ -257,6 +257,8 @@ MonoBehaviour:
   xOffset: 2
   yOffset: 2
   rowLength: 4
+  cardTypes: []
+  cards: []
 --- !u!4 &2120111105
 Transform:
   m_ObjectHideFlags: 0

@@ -5,150 +5,144 @@ using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour
 {
-    public Transform gridTopCorner;
-    public float xOffset;
-    public float yOffset;
-    public int rowLength;
+    public static GameController controller = null;
 
-    private Vector3 offsetPoint;
-    private GameObject offset;
-    private GameObject[] cardTypes;
-    private GameObject[] cards;
-    private bool gameWon;
-    private GameObject card1;
-    private GameObject card2;
+    [Header("Grid Layout Variables")]
+    public Transform gridTopCorner = null;
+    public float xOffset = 0f;
+    public float yOffset = 0f;
+    public int rowLength = 1;
 
-    void Start()
+    private GameObject offset = null;
+    private GameObject cardParent = null;
+    private Vector3 offsetPoint = Vector3.zero;
+
+    [Header("Card Data Variables")]
+    [SerializeField] private GameObject[] cardTypes = null;
+    [SerializeField] private GameObject[] cards = null;
+    private GameObject card1 = null;
+    private GameObject card2 = null;
+
+    private bool gameWon = false;
+
+    void Awake()
     {
-        Debug.Log("started game.");
+        // Setting up the Singleton Pattern
+        if (controller == null)
+            controller = this;
+        else
+            GameObject.Destroy(gameObject);
+
+        // Loading In all cards
         cardTypes = Resources.LoadAll<GameObject>("Cards") as GameObject[];
-        Debug.Log("loaded cards.");
-        Debug.Log("number loaded: " + cardTypes.Length);
-        int counter = 0;
-        offset = new GameObject();
+        Debug.Log("Finished loading " + cardTypes.Length.ToString() + " cards.");
+
+        offset = new GameObject { name = "Offset" };
         offset.transform.position = gridTopCorner.position;
         offsetPoint = new Vector3(offset.transform.position.x, offset.transform.position.y, offset.transform.position.z);
-        cards = new GameObject[cardTypes.Length*2];
+        
+        if(cardTypes != null) {
+            cardParent = new GameObject("CardParent");
+            cardParent.transform.position = Vector3.zero;
 
-        if(cardTypes != null)
-        {
-            Debug.Log("loaded card types, setting up cards.");
-            for (int i = 0; i < cardTypes.Length; i++)
-            {
-                cards[counter++] = Instantiate(cardTypes[i], gridTopCorner.position, Quaternion.identity);
-                cards[counter++] = Instantiate(cardTypes[i], gridTopCorner.position, Quaternion.identity);
+            int counter = 0;
+            cards = new GameObject[cardTypes.Length * 2];
+
+            for (int i = 0; i < cardTypes.Length; i++) {
+                cards[counter++] = Instantiate(cardTypes[i], gridTopCorner.position, Quaternion.identity, cardParent.transform);
+                cards[counter++] = Instantiate(cardTypes[i], gridTopCorner.position, Quaternion.identity, cardParent.transform);
             }
         }
-        shuffleCards();
-        placeCards();
 
-        
-        card1 = null;
-        card2 = null;
-        gameWon = false;
+        ShuffleCards();
+        PlaceCards();
     }
 
     void Update()
     {
-        if (gameWon == true)
-        {
+        if (gameWon) {
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
 
-        if(Input.GetMouseButtonDown(0))
-        {
+        if (Input.GetMouseButtonDown(0)) {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
-            if(Physics.Raycast(ray, out hit, 50))
+            if (Physics.Raycast(ray, out hit, 50))
             {
                 GameObject hitCard = hit.transform.gameObject;
-                if (!hitCard.GetComponent<CardClass>().getFlipped())
+                if (!hitCard.GetComponent<CardClass>().GetRevealed())
                 {
-                    hitCard.GetComponent<CardClass>().flipCard();
-                    setCard(hitCard);
-                    Debug.Log("Flipped Card: " + hitCard.tag);
+                    hitCard.GetComponent<CardClass>().FlipCard();
+                    SetCard(hitCard);
                 }
             }
         }
-
-        if(card1 != null && card2 != null)
-        {
-            if (card1.tag == card2.tag)
-            {
-                matchRemove();
-                card1 = null;
-                card2 = null;
-            }
-            else
-            {
-                resetCards();
-                card1 = null;
-                card2 = null;
-            }
-        }
-
-        checkWin();
     }
 
-    public void setCard(GameObject card)
+    public void CheckForCardMatch()
     {
-        if (card1 == null)
-        {
-            card1 = card;
+        Debug.Log("Checking Cards");
+
+        if (card1 != null && card1.GetComponent<CardClass>().GetRevealed() && card2 != null && card2.GetComponent<CardClass>().GetRevealed()) {
+            if (card1.tag == card2.tag) {
+                MatchRemove();
+                card1 = null;
+                card2 = null;
+
+                CheckWin();
+            } else {
+                ResetCards();
+                card1 = null;
+                card2 = null;
+            }
         }
-        else if (card2 == null)
-        {
+    }
+
+    public void SetCard(GameObject card)
+    {
+        if (card1 == null) {
+            card1 = card;
+        } else if (card2 == null) {
             card2 = card;
         }
-        else
-        {
-            //Debug.Log("This shouldn't have happened.");
-        }
     }
 
-    private void matchRemove()
+    private void MatchRemove()
     {
-        if (card1 != null & card2 != null)
-        {
+        if (card1 != null & card2 != null) {
             card1.SetActive(false);
             card2.SetActive(false);
         }
     }
 
-    private void resetCards()
+    private void ResetCards()
     {
-        if(card1 != null)
-        {
-            card1.GetComponent<CardClass>().flipCard();
+        if (card1 != null) {
+            card1.GetComponent<CardClass>().FlipCard();
         }
-        if(card2 != null)
-        {
-            card2.GetComponent<CardClass>().flipCard();
+
+        if (card2 != null) {
+            card2.GetComponent<CardClass>().FlipCard();
         }
     }
     
-    private void setOffset()
+    private void SetOffset()
     {
-        if (offset.transform.position.x >= gridTopCorner.position.x + (xOffset * (rowLength-1)))
-        {
-            //Debug.Log("reached end of row, resetting x");
+        if (offset.transform.position.x >= gridTopCorner.position.x + (xOffset * (rowLength-1))) {
             offsetPoint.x = gridTopCorner.position.x;
             offsetPoint.y = offsetPoint.y - yOffset;
             offset.transform.position = offsetPoint;
-        }
-        else
-        {
+        } else {
             offsetPoint.x += xOffset;
             offset.transform.position = offsetPoint;
         }
     }
 
-    private void shuffleCards()
+    private void ShuffleCards()
     {
-        GameObject temp;
-        for (int i = 0; i < cardTypes.Length*2; i++)
-        {
+        GameObject temp = null;
+        for(int i = 0; i < cardTypes.Length*2; i++) {
             int random = Random.Range(0, cards.Length);
             temp = cards[random];
             cards[random] = cards[i];
@@ -156,24 +150,21 @@ public class GameController : MonoBehaviour
         }
     }
 
-    private void placeCards()
+    private void PlaceCards()
     {
-        for (int i = 0; i < cardTypes.Length*2; i++)
-        {
+        for(int i = 0; i < cardTypes.Length*2; i++) {
             cards[i].transform.position = offset.transform.position;
-            setOffset();
+            SetOffset();
         }
     }
 
-    private void checkWin()
+    private void CheckWin()
     {
-        for (int i = 0; i < cardTypes.Length*2; i++)
-        {
-            if(cards[i].activeInHierarchy == true)
-            {
+        for(int i = 0; i < cardTypes.Length*2; i++) {
+            if (cards[i].activeInHierarchy == true)
                 return;
-            }
         }
+
         gameWon = true;
     }
 }
