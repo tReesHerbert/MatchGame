@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
 
 public class CardClass : MonoBehaviour
 {
@@ -10,7 +9,6 @@ public class CardClass : MonoBehaviour
     private bool isMatched = false;
     private bool turning = false;
 
-    private TextMeshProUGUI numberText = null;
     private Animator anim = null;
 
     public void SetHidden() { revealed = false; turning = false; }
@@ -31,9 +29,6 @@ public class CardClass : MonoBehaviour
     {
         // Getting the Anim Ref
         anim = GetComponent<Animator>();
-
-        // Getting the Debug Text
-        numberText = transform.GetChild(0).GetComponent<TextMeshProUGUI>();
     }
 
     public void FlipCard() {
