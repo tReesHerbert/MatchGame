@@ -25,7 +25,9 @@ public class GameController : MonoBehaviour
     private GameObject card2 = null;
 
     [Header("GUI References")]
+    [SerializeField] private GameObject endGameMenu = null;
     [SerializeField] private TextMeshProUGUI tryCounter = null;
+    [SerializeField] private TextMeshProUGUI endFlipperCounter = null;
 
     [Header("Game State Variables")]
     private int matchCounter = 0;
@@ -33,6 +35,8 @@ public class GameController : MonoBehaviour
 
     void Awake()
     {
+        endGameMenu.SetActive(false);
+
         // Setting up the Singleton Pattern
         if (controller == null)
             controller = this;
@@ -66,21 +70,17 @@ public class GameController : MonoBehaviour
 
     void Update()
     {
-        if (gameWon) {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-        }
+        if (card1 == null || card2 == null) {
+            if (Input.GetMouseButtonDown(0)) {
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                RaycastHit hit;
 
-        if (Input.GetMouseButtonDown(0)) {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-
-            if (Physics.Raycast(ray, out hit, 50))
-            {
-                GameObject hitCard = hit.transform.gameObject;
-                if (!hitCard.GetComponent<CardClass>().GetRevealed())
-                {
-                    hitCard.GetComponent<CardClass>().FlipCard();
-                    SetCard(hitCard);
+                if (Physics.Raycast(ray, out hit, 50)) {
+                    CardClass hitCard = hit.transform.gameObject.GetComponent<CardClass>();
+                    if (!hitCard.GetRevealed() && !hitCard.IsClicked()) {
+                        hitCard.GetComponent<CardClass>().FlipCard();
+                        SetCard(hitCard.gameObject);
+                    }
                 }
             }
         }
@@ -174,6 +174,8 @@ public class GameController : MonoBehaviour
         }
 
         gameWon = true;
+        endGameMenu.SetActive(true);
+        endFlipperCounter.text = "Number of Tries: " + tryCounter.text;
     }
 
     public void RestartGame() { SceneManager.LoadScene(SceneManager.GetActiveScene().name); }

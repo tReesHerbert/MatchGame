@@ -8,6 +8,7 @@ public class CardClass : MonoBehaviour
     private bool revealed = false;
     private bool isMatched = false;
     private bool turning = false;
+    private bool clicked = false;
 
     private Animator anim = null;
 
@@ -22,8 +23,9 @@ public class CardClass : MonoBehaviour
         GameController.controller.CheckForCardMatch();
     }
 
+    public bool IsClicked() { return clicked; }
     public bool GetIsMatched() { return isMatched; }
-    public bool GetRevealed() { return revealed; }
+    public bool GetRevealed() { return (revealed && !turning); }
 
     public void Awake()
     {
@@ -35,10 +37,11 @@ public class CardClass : MonoBehaviour
         if (!turning) {
             if (!revealed) {
                 anim.SetTrigger("Reveal");
-                turning = true;
+                turning = clicked = true;
             } else {
                 anim.SetTrigger("Hide");
                 turning = true;
+                clicked = false;
             }
         }
     }
